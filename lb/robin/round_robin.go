@@ -21,10 +21,8 @@ func (r *RoundRobin[T]) Next() *T {
 	if len(r.set) == 0 {
 		return nil
 	}
-	n := atomic.AddUint64(&r.next, 1)
-	// n-1 actually gives us the current index
-	idx := int(n-1) % len(r.set)
 
+	idx := int(atomic.AddUint64(&r.next, 1)-1) % len(r.set)
 	return &r.set[idx]
 }
 
