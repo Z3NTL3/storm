@@ -5,6 +5,10 @@ import (
 )
 
 type Bot struct {
+	rsrc resources
+}
+
+type resources struct {
 	proxies lb.RoundRobin
 	accepts lb.RoundRobin
 	headers lb.RoundRobin
