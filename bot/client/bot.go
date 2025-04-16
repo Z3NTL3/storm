@@ -1,7 +1,7 @@
 package client
 
 import (
-	lb "github.com/hlts2/round-robin"
+	lb "github.com/thegeekyasian/round-robin-go"
 )
 
 type Bot struct {
@@ -9,7 +9,7 @@ type Bot struct {
 }
 
 type resources struct {
-	proxies lb.RoundRobin
-	accepts lb.RoundRobin
-	headers lb.RoundRobin
+	proxies lb.RoundRobin[string]
+	accepts lb.RoundRobin[string]
+	headers lb.RoundRobin[string]
 }
