@@ -2,7 +2,10 @@ module z3ntl3/storm
 
 go 1.23.3
 
-require github.com/spf13/cobra v1.9.1
+require (
+	github.com/hlts2/round-robin v0.0.0-20230814122250-2a846cd188be
+	github.com/spf13/cobra v1.9.1
+)
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
