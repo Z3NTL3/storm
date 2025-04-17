@@ -21,7 +21,7 @@ type resources struct {
 	headers *lb.RoundRobin[string]
 }
 
-func New() {
+func New() *Bot {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
@@ -39,13 +39,24 @@ func New() {
 			log.Fatal(err)
 		}
 
-		// todo parts, stays ugly as of now
 		contents = []byte(strings.Trim(string(contents), "\r\n"))
 		if i == 0 {
-			parts := strings.Split(string(contents), "\n")
-			lb := lb.New(parts...)
 
+		}
+
+		parts := strings.Split(string(contents), "\n")
+		lb := lb.New(parts...)
+
+		switch i {
+		case 0:
 			instance.rsrc.accepts = lb
+			continue
+		case 1:
+			instance.rsrc.headers = lb
+		case 2:
+			instance.rsrc.proxies = lb
 		}
 	}
+
+	return instance
 }
