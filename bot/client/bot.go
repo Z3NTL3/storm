@@ -2,6 +2,7 @@ package client
 
 import (
 	// todo make own lb impl because the below one is not accomodating our needs
+
 	"io"
 	"log"
 	"os"
@@ -12,13 +13,13 @@ import (
 )
 
 type Bot struct {
-	rsrc resources
+	Rsrc resources
 }
 
 type resources struct {
-	proxies *lb.RoundRobin[string]
-	accepts *lb.RoundRobin[string]
-	headers *lb.RoundRobin[string]
+	Proxies *lb.RoundRobin[string]
+	Accepts *lb.RoundRobin[string]
+	Headers *lb.RoundRobin[string]
 }
 
 func New() *Bot {
@@ -49,12 +50,12 @@ func New() *Bot {
 
 		switch i {
 		case 0:
-			instance.rsrc.accepts = lb
+			instance.Rsrc.Accepts = lb
 			continue
 		case 1:
-			instance.rsrc.headers = lb
+			instance.Rsrc.Headers = lb
 		case 2:
-			instance.rsrc.proxies = lb
+			instance.Rsrc.Proxies = lb
 		}
 	}
 

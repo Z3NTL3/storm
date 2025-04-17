@@ -57,26 +57,24 @@ func addFlags() {
 
 	for _, v := range opts {
 		switch v.name {
-		case "target":
-			rootCmd.Flags().
-				StringVar(v.data_ref.(*string), v.name, v.value.(string), v.usage)
+		case "timeout", "target":
+			if v.name == "timeout" {
+				d, err := time.ParseDuration(v.value.(string))
+				if err != nil {
+					log.Fatal(err)
+				}
 
-		case "timeout":
-			d, err := time.ParseDuration(v.value.(string))
-			if err != nil {
-				log.Fatal(err)
+				rootCmd.Flags().
+					DurationVar(v.data_ref.(*time.Duration), v.name, d, v.usage)
+			} else {
+				rootCmd.Flags().
+					StringVar(v.data_ref.(*string), v.name, v.value.(string), v.usage)
 			}
 
-			rootCmd.Flags().
-				DurationVar(v.data_ref.(*time.Duration), v.name, d, v.usage)
-
+			rootCmd.MarkFlagRequired(v.name)
 		default:
 			rootCmd.Flags().
 				StringVar(v.data_ref.(*string), v.name, v.value.(string), v.usage)
-		}
-
-		if err := rootCmd.MarkFlagRequired(v.name); err != nil {
-			log.Fatal(err)
 		}
 	}
 }
