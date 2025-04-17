@@ -61,3 +61,12 @@ func New() *Bot {
 
 	return instance
 }
+
+// Dedicated to be spawned on a goroutine
+// The body is thread-safe
+//
+// Arguments should be passed by [Bot]'s Next method on the fields as they comfort [lb.RoundRobin]
+func (c *Bot) Stress(proxy, headers, accepts string) {
+	// client := fasthttp.Client{}
+	// req := fasthttp.AcquireRequest()
+}
