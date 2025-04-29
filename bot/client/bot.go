@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"z3ntl3/storm/globals"
 	lb "z3ntl3/storm/lb/robin"
 
@@ -16,8 +17,12 @@ import (
 	"github.com/valyala/fasthttp/fasthttpproxy"
 )
 
+const PoolSize = 1_000
+
 type Bot struct {
 	Rsrc resources
+	Exit bool
+	*sync.Mutex
 }
 
 type resources struct {
@@ -39,6 +44,8 @@ func New() *Bot {
 	}
 
 	instance := new(Bot)
+	instance.Mutex = &sync.Mutex{}
+
 	for i, path_ := range []string{globals.Accepts, globals.Headers, globals.ProxyFile} {
 		f, err := os.Open(path.Join(cwd, path_))
 		if err != nil {
@@ -50,7 +57,7 @@ func New() *Bot {
 			log.Fatal(err)
 		}
 
-		contents = []byte(strings.Trim(string(contents), "\r\n"))
+		contents = []byte(strings.TrimSpace(string(contents)))
 		parts := strings.Split(string(contents), "\n")
 		lb := lb.New(parts...)
 
@@ -69,18 +76,38 @@ func New() *Bot {
 	return instance
 }
 
+func (c *Bot) SigExit() {
+	c.Mutex.Lock()
+	c.Exit = true
+	c.Mutex.Unlock()
+}
+
+func (c *Bot) ShouldExit() bool {
+	c.Mutex.Lock()
+	exit := c.Exit
+	c.Mutex.Unlock()
+
+	return exit
+}
+
 // Dedicated to be spawned on a goroutine
 // The body is thread-safe
 //
 // Arguments should be passed by [Bot]'s Next method on the fields as they comfort [lb.RoundRobin]
-func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan MessageContext) {
+func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext) {
+	defer func() {
+		recover() // may panic due to send on closed channel after a kill sig
+	}()
 	var client fasthttp.Client
 
+	proxy = strings.Trim(proxy, "\r\n")
 	proxyURI, err := url.Parse(proxy)
 	if err != nil {
 		pool_msg <- MessageContext{
-			Err: err,
+			Err:  err,
+			Kill: true, // kill because format seems to be invalid!
 		}
+		return
 	}
 
 	switch proxyURI.Scheme {
@@ -90,21 +117,26 @@ func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan MessageContext) {
 		client.Dial = fasthttpproxy.FasthttpSocksDialerDualStack(proxy)
 	default:
 		pool_msg <- MessageContext{
-			Err:  errors.New("unsupported proxy protocol: socks4, use socks5 or http/https instead"),
+			Err:  errors.New("unsupported proxy protocol: can only use socks5 or http/https"),
 			Kill: true,
 		}
+		return
 	}
 
 	req := fasthttp.AcquireRequest()
 	for header := range c.Rsrc.Headers.Iter() {
-		if !strings.Contains(*header, " ") {
+		*header = strings.Trim(*header, "\r\n")
+
+		if !strings.Contains(*header, ": ") {
 			continue
 		}
-		h := strings.Split(*header, " ")
+		h := strings.Split(*header, ": ")
 		req.Header.Set(h[0], h[1])
 	}
 
 	for accept := range c.Rsrc.Accepts.Iter() {
+		*accept = strings.Trim(*accept, "\r\n")
+
 		req.Header.Set("Accept", *accept)
 	}
 

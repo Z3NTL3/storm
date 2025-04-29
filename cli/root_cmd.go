@@ -1,9 +1,11 @@
 package cli
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
+	"z3ntl3/storm/bot/client"
 	"z3ntl3/storm/globals"
 
 	"github.com/spf13/cobra"
@@ -13,7 +15,50 @@ var rootCmd = &cobra.Command{
 	Use:   "lightup",
 	Short: "Starts stress testing using L7",
 	Run: func(cmd *cobra.Command, args []string) {
-		// todo
+		c := client.New()
+		channel := make(chan client.MessageContext, client.PoolSize)
+		var i uint64 = 0
+
+		// run on the background
+		go func() {
+			for {
+				i++
+				go c.Stress(*c.Rsrc.Proxies.Next(), i, channel)
+
+				if c.ShouldExit() {
+					close(channel)
+					break
+				}
+			}
+		}()
+
+		for {
+			msg, ok := <-channel
+			if !ok {
+				c.SigExit()
+				os.Exit(0)
+			}
+
+			if msg.Kill && msg.Err != nil {
+				c.SigExit()
+				log.Fatal(msg.Err)
+			}
+
+			if msg.Kill && msg.Msg != "" {
+				c.SigExit()
+				fmt.Printf("%s\n", msg.Msg)
+				return
+			}
+
+			if msg.Kill {
+				c.SigExit()
+				return
+			}
+
+			if msg.Msg != "" {
+				fmt.Printf("h%s\n", msg.Msg)
+			}
+		}
 	},
 }
 
