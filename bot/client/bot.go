@@ -51,21 +51,18 @@ func New() *Bot {
 		}
 
 		contents = []byte(strings.Trim(string(contents), "\r\n"))
-		if i == 0 {
-
-		}
-
 		parts := strings.Split(string(contents), "\n")
 		lb := lb.New(parts...)
 
 		switch i {
 		case 0:
 			instance.Rsrc.Accepts = lb
-			continue
 		case 1:
 			instance.Rsrc.Headers = lb
 		case 2:
 			instance.Rsrc.Proxies = lb
+		default:
+			log.Fatal("could not match any data to use for the stress test")
 		}
 	}
 
