@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -39,24 +38,17 @@ var rootCmd = &cobra.Command{
 				os.Exit(0)
 			}
 
-			if msg.Kill && msg.Err != nil {
-				c.SigExit()
-				log.Fatal(msg.Err)
-			}
-
-			if msg.Kill && msg.Msg != "" {
-				c.SigExit()
-				fmt.Printf("%s\n", msg.Msg)
-				return
-			}
-
 			if msg.Kill {
 				c.SigExit()
-				return
-			}
 
-			if msg.Msg != "" {
-				fmt.Printf("h%s\n", msg.Msg)
+				// precedence over msg when both set
+				if msg.Err != nil {
+					log.Fatal(msg.Err)
+				}
+
+				if msg.Msg != "" {
+					log.Fatal(msg.Msg)
+				}
 			}
 		}
 	},
