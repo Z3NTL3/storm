@@ -107,6 +107,11 @@ func addFlags() {
 			name:     "headers_file",
 			usage:    "Relative file path to your file with HTTP headers",
 			value:    "data/headers.txt",
+		}, {
+			data_ref: &globals.Refs,
+			name:     "refs_file",
+			usage:    "Relative file path to your file with HTTP referer headers",
+			value:    "data/refs.txt",
 		},
 	}
 
