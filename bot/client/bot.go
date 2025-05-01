@@ -106,7 +106,7 @@ func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext,
 	switch globals.ProxyProto {
 	case "http", "https":
 		client.Dial = fasthttpproxy.FasthttpHTTPDialerDualStack(proxy)
-	case "socks5":
+	case "socks5", "socks4":
 		client.Dial = fasthttpproxy.FasthttpSocksDialerDualStack(proxy)
 	default:
 		pool_msg <- MessageContext{
