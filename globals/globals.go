@@ -10,4 +10,5 @@ var (
 	Headers    string
 	ProxyProto string
 	Refs       string
+	UAs        string
 )

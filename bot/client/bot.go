@@ -30,6 +30,7 @@ type resources struct {
 	Accepts  *lb.RoundRobin[string]
 	Headers  *lb.RoundRobin[string]
 	Referers *lb.RoundRobin[string]
+	UAs      *lb.RoundRobin[string]
 }
 
 type MessageContext struct {
@@ -71,6 +72,8 @@ func New() *Bot {
 			instance.Rsrc.Proxies = lb
 		case 3:
 			instance.Rsrc.Referers = lb
+		case 4:
+			instance.Rsrc.UAs = lb
 		default:
 			log.Fatal("could not match any data to use for the stress test")
 		}
@@ -132,6 +135,7 @@ func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext)
 	// set some specific header using LB
 	req.Header.Set("Accept", *c.Rsrc.Accepts.Next())
 	req.Header.Set("Referer", *c.Rsrc.Referers.Next())
+	req.Header.Set("User-Agent", *c.Rsrc.UAs.Next())
 
 	// do not observe response as to save memory
 	err := client.Do(req, nil)
