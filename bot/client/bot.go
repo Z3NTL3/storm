@@ -48,7 +48,7 @@ func New() *Bot {
 	instance := new(Bot)
 	instance.Mutex = &sync.Mutex{}
 
-	for i, path_ := range []string{globals.Accepts, globals.Headers, globals.ProxyFile, globals.Refs} {
+	for i, path_ := range []string{globals.Accepts, globals.Headers, globals.ProxyFile, globals.Refs, globals.UAs} {
 		f, err := os.Open(path.Join(cwd, path_))
 		if err != nil {
 			log.Fatal(err)
