@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/url"
 	"os"
 	"path"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"z3ntl3/storm/globals"
 	lb "z3ntl3/storm/lb/robin"
 
@@ -21,7 +21,7 @@ const PoolSize = 1_000
 
 type Bot struct {
 	Rsrc resources
-	Exit bool
+	Exit atomic.Uint32
 	*sync.Mutex
 }
 
@@ -77,17 +77,15 @@ func New() *Bot {
 }
 
 func (c *Bot) SigExit() {
-	c.Mutex.Lock()
-	c.Exit = true
-	c.Mutex.Unlock()
+	c.Exit.Store(1)
 }
 
 func (c *Bot) ShouldExit() bool {
-	c.Mutex.Lock()
-	exit := c.Exit
-	c.Mutex.Unlock()
-
-	return exit
+	if c.Exit.Load() == 1 {
+		return true
+	} else {
+		return false
+	}
 }
 
 // Dedicated to be spawned on a goroutine
@@ -101,16 +99,7 @@ func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext)
 	var client fasthttp.Client
 
 	proxy = strings.Trim(proxy, "\r\n")
-	proxyURI, err := url.Parse(proxy)
-	if err != nil {
-		pool_msg <- MessageContext{
-			Err:  err,
-			Kill: true, // kill because format seems to be invalid!
-		}
-		return
-	}
-
-	switch proxyURI.Scheme {
+	switch globals.ProxyProto {
 	case "http", "https":
 		client.Dial = fasthttpproxy.FasthttpHTTPDialerDualStack(proxy)
 	case "socks5":
@@ -124,6 +113,8 @@ func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext)
 	}
 
 	req := fasthttp.AcquireRequest()
+	req.SetRequestURI(globals.TargetURL) // *&x will be simplified to x. It will not copy x. (SA4001)
+
 	for header := range c.Rsrc.Headers.Iter() {
 		*header = strings.Trim(*header, "\r\n")
 
@@ -141,15 +132,15 @@ func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext)
 	}
 
 	// do not observe response as to save memory
-	err = client.Do(req, nil)
+	err := client.Do(req, nil)
 	if err != nil {
 		pool_msg <- MessageContext{
-			Msg: fmt.Sprintf("thread [%d] sending payload responded with: %s", th_id, err),
+			Err: fmt.Errorf("err: thread [%d] sending payload responded with: %s", th_id, err),
 		}
 		return
 	}
 
 	pool_msg <- MessageContext{
-		Msg: fmt.Sprintf("thread [%d] payload successfully sent: %s", th_id, req.Header.String()),
+		Msg: fmt.Sprintf("thread [%d] payload successfully sent [%s]: %s\n", th_id, proxy, req.Header.String()),
 	}
 }

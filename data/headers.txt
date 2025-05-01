@@ -23,3 +23,5 @@ Referer: 1-best-seo.com
 Referer: 1-free-share-buttons.com
 Referer: 100-reasons-for-seo.com
 Referer: 100dollars-seo.com
+Connection: Keep-Alive
+Keep-Alive: timeout=3600, max=0

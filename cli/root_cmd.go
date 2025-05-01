@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -28,20 +29,26 @@ var rootCmd = &cobra.Command{
 					close(channel)
 					break
 				}
+
 			}
 		}()
 
 		for {
+			if c.ShouldExit() {
+				break
+			}
+
 			msg, ok := <-channel
 			if !ok {
 				c.SigExit()
-				os.Exit(0)
+				break
 			}
 
 			if msg.Kill {
 				c.SigExit()
 
 				// precedence over msg when both set
+				// notice that we only record major errors with [msg.Kill]
 				if msg.Err != nil {
 					log.Fatal(msg.Err)
 				}
@@ -49,6 +56,11 @@ var rootCmd = &cobra.Command{
 				if msg.Msg != "" {
 					log.Fatal(msg.Msg)
 				}
+			}
+
+			if msg.Msg != "" {
+				fmt.Println(msg.Msg)
+				continue
 			}
 		}
 	},
@@ -67,6 +79,12 @@ func addFlags() {
 			name:     "target",
 			usage:    "Target URI, including the scheme, either 'http' or 'https'",
 			value:    "",
+			required: true,
+		}, {
+			data_ref: &globals.ProxyProto,
+			name:     "proto",
+			usage:    "Proxy protocol",
+			value:    "http",
 			required: true,
 		}, {
 			data_ref: &globals.Timeout,
