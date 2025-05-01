@@ -108,6 +108,12 @@ func addFlags() {
 			value:    "5s",
 			required: true,
 		}, {
+			data_ref: &client.PoolSize,
+			name:     "pool",
+			usage:    "The size of the pool",
+			value:    uint64(1_000_000),
+			required: true,
+		}, {
 			data_ref: &globals.ProxyFile,
 			name:     "proxy_file",
 			usage:    "Relative file path to your file with proxies",
@@ -152,6 +158,9 @@ func addFlags() {
 			}
 
 			rootCmd.MarkFlagRequired(v.name)
+		case "pool":
+			rootCmd.Flags().
+				Uint64Var(v.data_ref.(*uint64), v.name, v.value.(uint64), v.usage)
 		default:
 			rootCmd.Flags().
 				StringVar(v.data_ref.(*string), v.name, v.value.(string), v.usage)

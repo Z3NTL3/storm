@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"z3ntl3/storm/globals"
 	lb "z3ntl3/storm/lb/robin"
@@ -17,12 +16,11 @@ import (
 	"github.com/valyala/fasthttp/fasthttpproxy"
 )
 
-const PoolSize = 1_000
+var PoolSize uint64
 
 type Bot struct {
 	Rsrc resources
 	Exit atomic.Uint32
-	*sync.Mutex
 }
 
 type resources struct {
@@ -46,7 +44,6 @@ func New() *Bot {
 	}
 
 	instance := new(Bot)
-	instance.Mutex = &sync.Mutex{}
 
 	for i, path_ := range []string{globals.Accepts, globals.Headers, globals.ProxyFile, globals.Refs, globals.UAs} {
 		f, err := os.Open(path.Join(cwd, path_))
