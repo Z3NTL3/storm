@@ -1,27 +1,2 @@
-Referer: https://www.google.com/search?q=
-Referer: https://check-host.net/
-Referer: https://www.facebook.com/
-Referer: https://www.youtube.com/
-Referer: https://www.fbi.com/
-Referer: https://www.bing.com/search?q=
-Referer: https://r.search.yahoo.com/
-Referer: https://www.cia.gov/index.html
-Referer: https://vk.com/profile.php?auto=
-Referer: https://www.usatoday.com/search/results?q=
-Referer: https://help.baidu.com/searchResult?keywords=
-Referer: https://steamcommunity.com/market/search?q=
-Referer: https://www.ted.com/search?q=
-Referer: https://play.google.com/store/search?q=
-Referer: 0-0.fr
-Referer: 01casino-x.ru
-Referer: 033nachtvandeliteratuur.nl
-Referer: 03e.info
-Referer: 03p.info
-Referer: 0n-line.tv
-Referer: 1-99seo.com
-Referer: 1-best-seo.com
-Referer: 1-free-share-buttons.com
-Referer: 100-reasons-for-seo.com
-Referer: 100dollars-seo.com
 Connection: Keep-Alive
 Keep-Alive: timeout=3600, max=0

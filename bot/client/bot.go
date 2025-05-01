@@ -26,9 +26,10 @@ type Bot struct {
 }
 
 type resources struct {
-	Proxies *lb.RoundRobin[string]
-	Accepts *lb.RoundRobin[string]
-	Headers *lb.RoundRobin[string]
+	Proxies  *lb.RoundRobin[string]
+	Accepts  *lb.RoundRobin[string]
+	Headers  *lb.RoundRobin[string]
+	Referers *lb.RoundRobin[string]
 }
 
 type MessageContext struct {
@@ -46,7 +47,7 @@ func New() *Bot {
 	instance := new(Bot)
 	instance.Mutex = &sync.Mutex{}
 
-	for i, path_ := range []string{globals.Accepts, globals.Headers, globals.ProxyFile} {
+	for i, path_ := range []string{globals.Accepts, globals.Headers, globals.ProxyFile, globals.Refs} {
 		f, err := os.Open(path.Join(cwd, path_))
 		if err != nil {
 			log.Fatal(err)
@@ -68,6 +69,8 @@ func New() *Bot {
 			instance.Rsrc.Headers = lb
 		case 2:
 			instance.Rsrc.Proxies = lb
+		case 3:
+			instance.Rsrc.Referers = lb
 		default:
 			log.Fatal("could not match any data to use for the stress test")
 		}
@@ -115,6 +118,7 @@ func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext)
 	req := fasthttp.AcquireRequest()
 	req.SetRequestURI(globals.TargetURL) // *&x will be simplified to x. It will not copy x. (SA4001)
 
+	// set all headers
 	for header := range c.Rsrc.Headers.Iter() {
 		*header = strings.Trim(*header, "\r\n")
 
@@ -125,11 +129,9 @@ func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext)
 		req.Header.Set(h[0], h[1])
 	}
 
-	for accept := range c.Rsrc.Accepts.Iter() {
-		*accept = strings.Trim(*accept, "\r\n")
-
-		req.Header.Set("Accept", *accept)
-	}
+	// set some specific header using LB
+	req.Header.Set("Accept", *c.Rsrc.Accepts.Next())
+	req.Header.Set("Referer", *c.Rsrc.Referers.Next())
 
 	// do not observe response as to save memory
 	err := client.Do(req, nil)

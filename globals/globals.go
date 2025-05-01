@@ -9,4 +9,5 @@ var (
 	Accepts    string
 	Headers    string
 	ProxyProto string
+	Refs       string
 )
