@@ -9,6 +9,7 @@ import (
 	"z3ntl3/storm/globals"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 )
 
 var rootCmd = &cobra.Command{
@@ -23,7 +24,21 @@ var rootCmd = &cobra.Command{
 		go func() {
 			for {
 				i++
-				go c.Stress(*c.Rsrc.Proxies.Next(), i, channel)
+				go func() {
+					ctx, cancel := context.WithTimeout(context.Background(), globals.Timeout)
+					defer cancel()
+
+					done := make(chan int)
+					go c.Stress(*c.Rsrc.Proxies.Next(), i, channel, done)
+
+					// when the wrapping goroutine exits the inner goroutine also terminates, which is when operation is done
+					// or timeout occurs
+					select {
+					case <-done:
+					case <-ctx.Done():
+						return
+					}
+				}()
 
 				if c.ShouldExit() {
 					close(channel)

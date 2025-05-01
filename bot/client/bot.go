@@ -98,9 +98,10 @@ func (c *Bot) ShouldExit() bool {
 // The body is thread-safe
 //
 // Arguments should be passed by [Bot]'s Next method on the fields as they comfort [lb.RoundRobin]
-func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext) {
+func (c *Bot) Stress(proxy string, th_id uint64, pool_msg chan<- MessageContext, done chan<- int) {
 	defer func() {
 		recover() // may panic due to send on closed channel after a kill sig
+		done <- 1
 	}()
 	var client fasthttp.Client
 
